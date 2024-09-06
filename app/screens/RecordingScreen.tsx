@@ -12,12 +12,13 @@ import * as ImagePicker from "expo-image-picker"
 import MaskedView from "@react-native-masked-view/masked-view"
 import { colors } from "app/theme"
 import Toast from "react-native-toast-message"
+import * as Nav from "@react-navigation/native"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
 interface RecordingScreenProps extends MainTabScreenProps<"recording"> {}
 
-export const RecordingScreen: FC<RecordingScreenProps> = observer(function RecordingScreen() {
+export const RecordingScreen: FC<RecordingScreenProps> = observer(function RecordingScreen(_props) {
   // Pull in one of our MST stores
   const { recording: recording1 } = useStores()
   const [recording, setRecording] = useState<Audio.Recording>()
@@ -25,9 +26,9 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
   const [volume, setVolume] = useState(0)
   const [isRecording, setIsRecording] = useState(false)
   const camera = useRef<CameraView | null>(null)
-
+  const route = Nav.useRoute()
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       const cameraStatus = await Camera.requestCameraPermissionsAsync()
       const audioStatus = await Camera.requestMicrophonePermissionsAsync()
     })()
@@ -111,6 +112,8 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
         name="add-a-photo"
         size={50}
         color="black"
+        suppressHighlighting
+
       />
       <TouchableOpacity onPress={recording ? stopRecording : startRecording}>
         <MaskedView
@@ -132,6 +135,7 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
         size={50}
         onPress={pickImage}
         style={$imagePickerButton}
+        suppressHighlighting
       ></FontAwesome>
     </Screen>
   )

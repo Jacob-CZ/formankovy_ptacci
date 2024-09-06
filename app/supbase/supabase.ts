@@ -5,4 +5,5 @@ const supabase = createClient<Database>(process.env.EXPO_PUBLIC_SUPABASE_URL as 
     storage: AsyncStorage,
     detectSessionInUrl: false,
   }},)
-export { supabase }
+const adminId = "ee2ebefc-78be-4e72-a6e0-c56b6e39144b"
+export { supabase, adminId }

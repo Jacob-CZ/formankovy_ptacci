@@ -8,9 +8,9 @@ import { set } from "date-fns"
 export const RecordingModel = types
   .model("Recording")
   .props({
-    imageUri: types.maybeNull(types.string),
+    imageUri:types.union(types.string, types.undefined),
     imageBase64: types.maybeNull(types.string),
-    soundUri: types.maybeNull(types.string),
+    soundUri:types.union(types.string, types.undefined) ,
     soundBase64:types.maybeNull(types.string)
   })
   .actions(withSetPropAction)
@@ -27,6 +27,12 @@ export const RecordingModel = types
     },
     setImageBase64(imageBase64: string) {
       self.imageBase64 = imageBase64
+    },
+    deleteUri(){
+      self.imageUri = undefined
+      self.soundUri = undefined
+      self.imageBase64 = null
+      self.soundBase64 = null
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
 

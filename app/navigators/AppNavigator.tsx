@@ -38,7 +38,8 @@ export type AppStackParamList = {
   // 🔥 Your screens go here
   Recording: undefined
   ViewRecording: undefined
-  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  SupportMessaging: undefined
+	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -77,7 +78,8 @@ const AppStack = observer(function AppStack() {
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}
       {/** 🔥 Your screens go here */}
-      {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+      <Stack.Screen name="SupportMessaging" component={Screens.SupportMessagingScreen} options={{presentation:"modal"}}/>
+			{/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
   )
 })

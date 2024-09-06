@@ -7,6 +7,8 @@ import { AppStackScreenProps } from "../navigators"
 import { colors, spacing } from "../theme"
 import { useSafeAreaInsetsStyle } from "../utils/useSafeAreaInsetsStyle"
 import { supabase } from "app/supbase/supabase"
+import Toast from "react-native-toast-message"
+import { useStores } from "app/models"
 
 interface WelcomeScreenProps extends AppStackScreenProps<"Welcome"> {}
 
@@ -14,15 +16,37 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
   const $ContainerInsets = useSafeAreaInsetsStyle(["bottom", "top"])
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
+  const {auth: {revalidateAuthStatus}} = useStores()
   async function handleLogin() {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     })
     if (error) {
-      console.log(error.message)
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      })
+    } else {
+      revalidateAuthStatus()
+      console.log(data)
+    }
+  }
+  async function handleSignUp() {
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      })
     } else {
       // revalidateAuthStatus()
+      await supabase.auth.signOut()
       console.log(data)
     }
   }
@@ -32,12 +56,20 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
       <Text tx="welcomeScreen.login" preset="heading" style={$loginText} />
       <Input onChangeText={setEmail} placeholder="Username" placeholderTextColor={colors.tint} />
       <Input onChangeText={setPassword} placeholder="Password" placeholderTextColor={colors.tint} />
+      <View style={$buttonsView}>
+      <Button
+        style={$button}
+        text="Sign Up"
+        onPress={handleSignUp}
+        textStyle={$buttonText}
+      />
       <Button
         style={$button}
         tx="welcomeScreen.login"
         onPress={handleLogin}
         textStyle={$buttonText}
       />
+      </View>
       <AppleAuthButton />
     </View>
   )
@@ -57,3 +89,7 @@ const $button: ViewStyle = {
   borderRadius: 8,
 }
 const $buttonText: TextStyle = {}
+const $buttonsView: ViewStyle = {
+  flexDirection: "row",
+  justifyContent: "space-between",
+}
