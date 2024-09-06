@@ -1,6 +1,7 @@
 import { Instance, SnapshotOut, types } from "mobx-state-tree"
 import { AuthModel } from "./Auth"
 import { RecordingModel } from "./Recording"
+import { UserModel } from "./User"
 
 /**
  * A RootStore model.
@@ -8,6 +9,7 @@ import { RecordingModel } from "./Recording"
 export const RootStoreModel = types.model("RootStore").props({
   auth: types.optional(AuthModel, {}),
   recording: types.optional(RecordingModel, {}),
+  user: types.optional(UserModel, {}),
 })
 
 /**

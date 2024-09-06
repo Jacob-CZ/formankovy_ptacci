@@ -19,7 +19,8 @@
     "baseUrl": ".",
     "paths": {
       "app/*": ["./app/*"],
-      "assets/*": ["./assets/*"]
+      "assets/*": ["./assets/*"],
+      "@/*": ["./*"]
     }
   },
   "extends": "expo/tsconfig.base",

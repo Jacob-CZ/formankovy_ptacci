@@ -14,7 +14,10 @@ import * as Navigators from "app/navigators"
 import Config from "../config"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import { colors } from "app/theme"
-import { useStores } from "app/models"
+import { UserModel, useStores } from "app/models"
+import { supabase } from "app/supbase/supabase"
+import { types } from "mobx-state-tree"
+import Toast from "react-native-toast-message"
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -35,7 +38,7 @@ export type AppStackParamList = {
   // 🔥 Your screens go here
   Recording: undefined
   ViewRecording: undefined
-	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -51,15 +54,21 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
 
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
 const Stack = createNativeStackNavigator<AppStackParamList>()
-
 const AppStack = observer(function AppStack() {
   const {
-    auth: { isSignedIn, revalidateAuthStatus },
+    auth: { isSignedIn, revalidateAuthStatus, user },
   } = useStores()
-  useEffect(()=>{
+  useEffect(() => {
     revalidateAuthStatus()
-    
   })
+  async function setUserData() {
+    const { data, error } = await supabase.auth.getUser()
+    if (error) {
+      console.log(error.message)
+    } else {
+    }
+  }
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, navigationBarColor: colors.background }}>
       {isSignedIn ? (
@@ -68,7 +77,7 @@ const AppStack = observer(function AppStack() {
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}
       {/** 🔥 Your screens go here */}
-			{/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+      {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
   )
 })
