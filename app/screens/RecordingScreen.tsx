@@ -23,6 +23,7 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
   const [recording, setRecording] = useState<Audio.Recording>()
   const [permissionResponse, requestPermission] = Audio.usePermissions()
   const [volume, setVolume] = useState(0)
+  const [isRecording, setIsRecording] = useState(false)
   const camera = useRef<CameraView | null>(null)
 
   useEffect(() => {
