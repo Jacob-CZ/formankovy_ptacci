@@ -18,6 +18,7 @@ import { UserModel, useStores } from "app/models"
 import { supabase } from "app/supbase/supabase"
 import { types } from "mobx-state-tree"
 import Toast from "react-native-toast-message"
+import * as Notifications from 'expo-notifications';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator
@@ -39,7 +40,7 @@ export type AppStackParamList = {
   Recording: undefined
   ViewRecording: undefined
   SupportMessaging: undefined
-	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -55,19 +56,42 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> = NativeStack
 
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
 const Stack = createNativeStackNavigator<AppStackParamList>()
+// Step 2: Import Notifications from expo-notifications
+
 const AppStack = observer(function AppStack() {
   const {
     auth: { isSignedIn, revalidateAuthStatus, user },
-  } = useStores()
+  } = useStores();
+
   useEffect(() => {
-    revalidateAuthStatus()
-  })
-  async function setUserData() {
-    const { data, error } = await supabase.auth.getUser()
-    if (error) {
-      console.log(error.message)
-    } else {
+    revalidateAuthStatus();
+    registerForPushNotificationsAsync();
+    // Step 4: Handle incoming notifications
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log(notification);
+    });
+
+    // Step 5: Clean up
+    return () => Notifications.removeNotificationSubscription(subscription);
+  }, []);
+
+  // Step 3: Request Permissions
+  async function registerForPushNotificationsAsync() {
+    let token;
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
     }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+
+    // Here you might want to send the token to your backend to send push notifications to this device
   }
 
   return (
@@ -77,12 +101,16 @@ const AppStack = observer(function AppStack() {
       ) : (
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}
-      {/** 🔥 Your screens go here */}
-      <Stack.Screen name="SupportMessaging" component={Screens.SupportMessagingScreen} options={{presentation:"modal"}}/>
-			{/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+      {/* Your screens go here */}
+      <Stack.Screen
+        name="SupportMessaging"
+        component={Screens.SupportMessagingScreen}
+        options={{ presentation: "modal" }}
+      />
+      {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
-  )
-})
+  );
+});
 
 export interface NavigationProps
   extends Partial<React.ComponentProps<typeof NavigationContainer>> {}
