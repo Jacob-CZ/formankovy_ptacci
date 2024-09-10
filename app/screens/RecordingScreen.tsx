@@ -7,12 +7,21 @@ import { Camera, CameraType, CameraView, useCameraPermissions } from "expo-camer
 import { useStores } from "app/models"
 import { Audio } from "expo-av"
 import * as FileSystem from "expo-file-system"
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons"
+import {
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+  SimpleLineIcons,
+} from "@expo/vector-icons"
 import * as ImagePicker from "expo-image-picker"
 import MaskedView from "@react-native-masked-view/masked-view"
 import { colors } from "app/theme"
 import Toast from "react-native-toast-message"
-import * as Nav from "@react-navigation/native"
+import * as Haptics from "expo-"
+import { impactAsync, ImpactFeedbackStyle } from "expo-haptics"
+import { set } from "date-fns"
+import { InView, IOScrollView } from "react-native-intersection-observer"
+import { useRoute } from "@react-navigation/native"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
@@ -25,27 +34,28 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
   const [permissionResponse, requestPermission] = Audio.usePermissions()
   const [volume, setVolume] = useState(0)
   const [isRecording, setIsRecording] = useState(false)
+  const [routeName, setRouteName] = useState("")
+  const [image, setImage] = useState<string | null>(null)
   const camera = useRef<CameraView | null>(null)
-  const route = Nav.useRoute()
+  const route = useRoute()
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       const cameraStatus = await Camera.requestCameraPermissionsAsync()
       const audioStatus = await Camera.requestMicrophonePermissionsAsync()
     })()
   }, [])
 
   function takePicture() {
+    impactAsync(ImpactFeedbackStyle.Rigid)
     camera.current?.takePictureAsync({ base64: true }).then((picture) => {
       recording1.setImageBase64(picture?.base64 as string)
       recording1.setImageUri(picture?.uri as string)
-    })
-    Toast.show({
-      type: "success",
-      text1: "Picture taken",
+      Toast.show({
+        type: "success",
+        text1: "Picture taken",
+      })
     })
   }
-
-  const [image, setImage] = useState<string | null>(null)
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -62,7 +72,7 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
     }
   }
 
-  async function startRecording() {
+  async function startRecordingAudio() {
     try {
       if (permissionResponse?.status !== "granted") {
         console.log("Requesting permission..")
@@ -72,8 +82,10 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       })
+      impactAsync(ImpactFeedbackStyle.Heavy)
 
       console.log("Starting recording..")
+
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
         (status) => {
@@ -88,7 +100,8 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
     }
   }
 
-  async function stopRecording() {
+  async function stopRecordingAudio() {
+    impactAsync(ImpactFeedbackStyle.Heavy)
     console.log("Stopping recording..")
     setRecording(undefined)
     await recording?.stopAndUnloadAsync()
@@ -103,19 +116,58 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
     recording1.setSoundBase64(base64)
     console.log("Recording stopped and stored at", uri)
   }
+  useEffect(() => {
+    if (isRecording) {
+      console.log("Starting video recording..")
+      impactAsync(ImpactFeedbackStyle.Heavy)
+      camera.current
+        ?.recordAsync()
+        .then(async (data) => {
+          recording1.setVideoUri(data!.uri)
+          console.log("Video recording saved at", data!.uri)
+          const base64 = await FileSystem.readAsStringAsync(data!.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          })
+          recording1.setVideoBase64(base64)
+        })
+        .catch((err) => {
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: err.message,
+          })
+        })
+    } else {
+      console.log("Stopping video recording..")
+      impactAsync(ImpactFeedbackStyle.Heavy)
+      Toast.show({
+        type: "success",
+        text1: "Video saved",
+      })
+      camera.current?.stopRecording()
+    }
+  }, [isRecording])
+
   return (
     <Screen style={$root} preset="fixed">
-      <CameraView style={$cameraView} ref={camera} mode="picture" />
+      <IOScrollView>
+        <InView onChange={(inView: boolean) => console.log("Inview:", inView)}>
+          {route.name === "recording" && (
+            <CameraView style={$cameraView} ref={camera} mode={"video"} />
+          )}
+        </InView>
+      </IOScrollView>
       <MaterialIcons
         style={$captureButton}
         onPress={takePicture}
+        onLongPress={() => setIsRecording(true)}
+        onPressOut={() => setIsRecording(false)}
         name="add-a-photo"
         size={50}
         color="black"
         suppressHighlighting
-
       />
-      <TouchableOpacity onPress={recording ? stopRecording : startRecording}>
+      <TouchableOpacity onPress={recording ? stopRecordingAudio : startRecordingAudio}>
         <MaskedView
           style={$recordingButton}
           maskElement={<FontAwesome name="microphone" size={50} color="tranparent" />}
@@ -137,6 +189,13 @@ export const RecordingScreen: FC<RecordingScreenProps> = observer(function Recor
         style={$imagePickerButton}
         suppressHighlighting
       ></FontAwesome>
+      <MaterialCommunityIcons
+        name="record"
+        style={[$isRecordingIndicator, { display: isRecording ? "flex" : "none" }]}
+        size={50}
+        color={"#ff0000"}
+        suppressHighlighting
+      />
     </Screen>
   )
 })
@@ -165,4 +224,10 @@ const $imagePickerButton: ViewStyle = {
   position: "absolute",
   bottom: 80,
   alignSelf: "center",
+}
+const $isRecordingIndicator: ViewStyle = {
+  position: "absolute",
+  bottom: Dimensions.get("window").height - 200,
+  alignSelf: "flex-end",
+  paddingRight: 20,
 }
