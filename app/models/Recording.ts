@@ -11,7 +11,9 @@ export const RecordingModel = types
     imageUri:types.union(types.string, types.undefined),
     imageBase64: types.maybeNull(types.string),
     soundUri:types.union(types.string, types.undefined) ,
-    soundBase64:types.maybeNull(types.string)
+    soundBase64:types.maybeNull(types.string),
+    videoUri:types.union(types.string, types.undefined),
+    videoBase64:types.maybeNull(types.string),
   })
   .actions(withSetPropAction)
   .views((self) => ({})) // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -28,11 +30,19 @@ export const RecordingModel = types
     setImageBase64(imageBase64: string) {
       self.imageBase64 = imageBase64
     },
+    setVideoUri(videoUri: string) {
+      self.videoUri = videoUri
+    },
+    setVideoBase64(videoBase64: string) {
+      self.videoBase64 = videoBase64
+    },
     deleteUri(){
       self.imageUri = undefined
       self.soundUri = undefined
+      self.videoUri = undefined
       self.imageBase64 = null
       self.soundBase64 = null
+      self.videoBase64 = null
     }
   })) // eslint-disable-line @typescript-eslint/no-unused-vars
 

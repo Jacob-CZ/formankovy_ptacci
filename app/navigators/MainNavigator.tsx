@@ -1,4 +1,4 @@
-import React from "react"
+import React, { lazy } from "react"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { WelcomeScreen } from "app/screens"
 import { CompositeScreenProps } from "@react-navigation/native"
@@ -33,6 +33,7 @@ export const MainNavigator = () => {
         tabBarStyle: { backgroundColor: "white" },
         tabBarShowLabel: false,
         tabBarIconStyle: { marginTop: 10 },
+        lazy: true,
       }}
     >
       <Tab.Screen

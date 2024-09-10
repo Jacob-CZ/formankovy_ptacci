@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useState } from "react"
+import React, { FC, useEffect, useRef, useState } from "react"
 import { observer } from "mobx-react-lite"
 import { ViewStyle, Image, ImageStyle, Dimensions, TextStyle, View } from "react-native"
-import {  MainTabScreenProps } from "app/navigators"
+import { MainTabScreenProps } from "app/navigators"
 import { Button, DrawerIconButton, Screen, Text } from "app/components"
 import { useStores } from "app/models"
 import { supabase } from "app/supbase/supabase"
@@ -12,9 +12,9 @@ import { Drawer } from "react-native-drawer-layout"
 import { useSafeAreaInsetsStyle } from "app/utils/useSafeAreaInsetsStyle"
 import { FontAwesome } from "@expo/vector-icons"
 import Toast from "react-native-toast-message"
-import { Audio } from "expo-av"
+import { Audio, Video } from "expo-av"
 import Animated, { useAnimatedStyle, withSpring } from "react-native-reanimated"
-import { is } from "date-fns/locale"
+import { is, vi } from "date-fns/locale"
 // import { useNavigation } from "@react-navigation/native"
 // import { useStores } from "app/models"
 
@@ -27,7 +27,7 @@ interface ViewRecordingScreenProps extends MainTabScreenProps<"viewRecording"> {
 
 export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
   function ViewRecordingScreen(_props) {
-    const {navigation} = _props
+    const { navigation } = _props
     // Pull in one of our MST stores
     const {
       recording,
@@ -36,9 +36,10 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
     const [predictedClass, setPredictedClass] = useState("")
     const [confidence, setConfidence] = useState(0)
     const [open, setOpen] = React.useState(false)
-    const [sound, setSound] = useState<Audio.Sound>();
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [sound, setSound] = useState<Audio.Sound>()
+    const [isPlaying, setIsPlaying] = useState(false)
     const [isSent, setIsSent] = useState(false)
+
     const $ContainerInsets = useSafeAreaInsetsStyle(["top"])
 
     useEffect(() => {
@@ -52,22 +53,22 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
     useEffect(() => {
       return sound
         ? () => {
-            console.log('Unloading Sound');
-            sound.unloadAsync();
+            console.log("Unloading Sound")
+            sound.unloadAsync()
           }
-        : undefined;
-    }, [sound]);
+        : undefined
+    }, [sound])
     const animatedStyles = useAnimatedStyle(() => {
       return {
-        transform: [{ translateY: withSpring( isSent ? -2000 : 0, {mass: 10}) }],
-      };
-    });
-    function animateSend(){
+        transform: [{ translateY: withSpring(isSent ? -2000 : 0, { mass: 10 }) }],
+      }
+    })
+    function animateSend() {
       setIsSent(true)
       setTimeout(() => {
         setIsSent(false)
         recording.deleteUri()
-      }, 1000);
+      }, 1000)
     }
     async function saveToDb() {
       if (!recording.imageBase64) {
@@ -105,7 +106,6 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
       const id = data1.id
       console.log("id", id)
 
-
       const { data, error } = await supabase.storage
         .from("birdImages")
         .upload(id, decode(recording.imageBase64!), {
@@ -136,17 +136,14 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
     }
     async function findBird() {
       try {
-        const res = await fetch(
-          "https://f4a0-77-236-222-22.ngrok-free.app/predict",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ audio_file: recording.soundBase64 }),
+        const res = await fetch("https://f4a0-77-236-222-22.ngrok-free.app/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        )
-        const data = await res.json() as BirdResponse
+          body: JSON.stringify({ audio_file: recording.soundBase64 }),
+        })
+        const data = (await res.json()) as BirdResponse
         setPredictedClass(data.predicted_class)
         setConfidence(data.confidence)
         console.log(data)
@@ -170,30 +167,31 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
               <FontAwesome name="user-circle" size={50} />
               <Text>{user.email}</Text>
             </View>
-            <Button style={$logoutButton} text="Message support" onPress={()=> navigation.push("SupportMessaging")}></Button>
+            <Button
+              style={$logoutButton}
+              text="Message support"
+              onPress={() => navigation.push("SupportMessaging")}
+            ></Button>
             <Button style={$logoutButton} text="log out" onPress={logOut}></Button>
           </View>
         </Screen>
       )
     }
     async function playSound() {
+      console.log("Loading Sound")
+      const { sound } = await Audio.Sound.createAsync({ uri: recording.soundUri! })
+      setSound(sound)
 
-      console.log('Loading Sound');
-      const { sound } = await Audio.Sound.createAsync({uri: recording.soundUri!});
-      setSound(sound);
-  
-      console.log('Playing Sound');
+      console.log("Playing Sound")
       setIsPlaying(true)
-      await sound.playAsync();
+      await sound.playAsync()
       // setIsPlaying(false)
     }
     async function stopSound() {
-      console.log('Stopping Sound');
+      console.log("Stopping Sound")
       setIsPlaying(false)
-      await sound?.stopAsync();
+      await sound?.stopAsync()
     }
-  
-
 
     return (
       <Drawer
@@ -204,43 +202,53 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
         drawerPosition="left"
         renderDrawerContent={() => <DrawerContent />}
       >
-          <Screen safeAreaEdges={["top"]} style={$root} preset="fixed">
-            <DrawerIconButton onPress={toggleDrawer} />
-            <View style={{ marginTop: -115, zIndex: -1 }}>
-            <Animated.View
+        <Screen safeAreaEdges={["top"]} style={$root} preset="fixed">
+          <DrawerIconButton onPress={toggleDrawer} />
+          <View style={{ marginTop: -115, zIndex: -1 }}>
+            <Animated.ScrollView
               style={animatedStyles}
-              
+              horizontal
+              decelerationRate={0}
+              snapToInterval={Dimensions.get("window").width}
+              snapToAlignment={"center"}
             >
-              {recording.imageUri ?
-                <Image
-                  resizeMode="contain"
-                  source={{ uri: recording.imageUri || undefined }}
-                  style={$image}
-                />
-                :
-                <View style={$image}/>
-              }
-              </Animated.View>
-              <Text text={predictedClass || undefined} style={$classText} />
-              <Text text={String(confidence)} style={$confidenceText} />
-              <Feather
-                name="upload"
-                size={64}
-                color="black"
-                onPress={saveToDb}
-                style={$uploadButton}
-                suppressHighlighting
-              />
-              <Feather
-                name={isPlaying ? "pause" : "play"}
-                size={64}
-                color="black"
-                onPress={isPlaying ? stopSound : playSound}
-                style={$playButton}
-                suppressHighlighting
-              />
-            </View>
-          </Screen>
+              <>
+                {recording.imageUri && (
+                  <Image
+                    resizeMode="contain"
+                    source={{ uri: recording.imageUri || undefined }}
+                    style={$image}
+                  />
+                )}
+                {recording.videoUri && (
+                  <Video
+                    source={{ uri: recording.videoUri }}
+                    style={$videoStyle}
+                    useNativeControls={true}
+                  />
+                )}
+              </>
+            </Animated.ScrollView>
+            <Text text={predictedClass || undefined} style={$classText} />
+            <Text text={String(confidence)} style={$confidenceText} />
+            <Feather
+              name="upload"
+              size={64}
+              color="black"
+              onPress={saveToDb}
+              style={$uploadButton}
+              suppressHighlighting
+            />
+            <Feather
+              name={isPlaying ? "pause" : "play"}
+              size={64}
+              color="black"
+              onPress={isPlaying ? stopSound : playSound}
+              style={$playButton}
+              suppressHighlighting
+            />
+          </View>
+        </Screen>
       </Drawer>
     )
   },
@@ -293,4 +301,8 @@ const $playButton: ViewStyle = {
   bottom: 80,
   alignSelf: "flex-end",
   paddingRight: 30,
+}
+const $videoStyle: ViewStyle = {
+  width: Dimensions.get("window").width,
+  height: Dimensions.get("window").height - 79,
 }

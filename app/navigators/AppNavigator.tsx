@@ -39,7 +39,7 @@ export type AppStackParamList = {
   Recording: undefined
   ViewRecording: undefined
   SupportMessaging: undefined
-	// IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
+  // IGNITE_GENERATOR_ANCHOR_APP_STACK_PARAM_LIST
 }
 
 /**
@@ -58,9 +58,11 @@ const Stack = createNativeStackNavigator<AppStackParamList>()
 const AppStack = observer(function AppStack() {
   const {
     auth: { isSignedIn, revalidateAuthStatus, user },
+    walkThrough: { setWakthroughTip },
   } = useStores()
   useEffect(() => {
     revalidateAuthStatus()
+    setWakthroughTip("a")
   })
   async function setUserData() {
     const { data, error } = await supabase.auth.getUser()
@@ -78,8 +80,12 @@ const AppStack = observer(function AppStack() {
         <Stack.Screen name="Welcome" component={Screens.WelcomeScreen} />
       )}
       {/** 🔥 Your screens go here */}
-      <Stack.Screen name="SupportMessaging" component={Screens.SupportMessagingScreen} options={{presentation:"modal"}}/>
-			{/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
+      <Stack.Screen
+        name="SupportMessaging"
+        component={Screens.SupportMessagingScreen}
+        options={{ presentation: "modal" }}
+      />
+      {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
   )
 })

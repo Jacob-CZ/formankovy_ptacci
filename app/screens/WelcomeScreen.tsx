@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite"
 import React, { FC } from "react"
 import { Image, ImageStyle, TextInput, TextStyle, View, ViewStyle } from "react-native"
-import { AppleAuthButton, Button, Input, Text } from "app/components"
+import { AppleAuthButton, Button, Input, Text, Walkthrough } from "app/components"
 import { isRTL } from "../i18n"
 import { AppStackScreenProps } from "../navigators"
 import { colors, spacing } from "../theme"
@@ -16,7 +16,9 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
   const $ContainerInsets = useSafeAreaInsetsStyle(["bottom", "top"])
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
-  const {auth: {revalidateAuthStatus}} = useStores()
+  const {
+    auth: { revalidateAuthStatus },
+  } = useStores()
   async function handleLogin() {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
@@ -57,18 +59,15 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
       <Input onChangeText={setEmail} placeholder="Username" placeholderTextColor={colors.tint} />
       <Input onChangeText={setPassword} placeholder="Password" placeholderTextColor={colors.tint} />
       <View style={$buttonsView}>
-      <Button
-        style={$button}
-        text="Sign Up"
-        onPress={handleSignUp}
-        textStyle={$buttonText}
-      />
-      <Button
-        style={$button}
-        tx="welcomeScreen.login"
-        onPress={handleLogin}
-        textStyle={$buttonText}
-      />
+        <Button style={$button} text="Sign Up" onPress={handleSignUp} textStyle={$buttonText} />
+        <Walkthrough name="a" onClose={() => console.log("sheest")}>
+          <Button
+            style={$button}
+            tx="welcomeScreen.login"
+            onPress={handleLogin}
+            textStyle={$buttonText}
+          />
+        </Walkthrough>
       </View>
       <AppleAuthButton />
     </View>
