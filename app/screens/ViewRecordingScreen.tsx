@@ -89,6 +89,8 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
         })
         return
       }
+      const imgbase64 = recording.imageBase64
+      const soundbase64 = recording.soundBase64
       animateSend()
       findBird()
       const location = await Location.getCurrentPositionAsync({})
@@ -108,10 +110,10 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
 
       const { data, error } = await supabase.storage
         .from("birdImages")
-        .upload(id, decode(recording.imageBase64!), {
+        .upload(id, decode(imgbase64!), {
           contentType: "image/png",
         })
-      // console.log("error", error)
+      console.log("error", error)
       Toast.show({
         type: "error",
         text1: "Error",
@@ -119,10 +121,10 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
       })
       const { data: data2, error: error2 } = await supabase.storage
         .from("birdSounds")
-        .upload(id, decode(recording.soundBase64!), {
+        .upload(id, decode(soundbase64!), {
           contentType: "audio/mpeg",
         })
-      // console.log("error", error2)
+      console.log("error", error2)
       Toast.show({
         type: "error",
         text1: "Error",
@@ -136,7 +138,7 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
     }
     async function findBird() {
       try {
-        const res = await fetch("https://f4a0-77-236-222-22.ngrok-free.app/predict", {
+        const res = await fetch("https://e439-89-103-246-117.ngrok-free.app/predict", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -179,6 +181,7 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
     }
     async function playSound() {
       console.log("Loading Sound")
+      console.log(recording.soundUri)
       const { sound } = await Audio.Sound.createAsync({ uri: recording.soundUri! })
       setSound(sound)
 
@@ -224,9 +227,17 @@ export const ViewRecordingScreen: FC<ViewRecordingScreenProps> = observer(
                   <Video
                     source={{ uri: recording.videoUri }}
                     style={$videoStyle}
-                    useNativeControls={true}
+                    key={recording.videoUri}
+                    // useNativeControls
+                    isLooping
+                    shouldPlay
+                    isMuted
                   />
                 )}
+                {!recording.imageUri && !recording.videoUri && (
+                  <View style={$image}>
+
+                  </View>)}
               </>
             </Animated.ScrollView>
             <Text text={predictedClass || undefined} style={$classText} />

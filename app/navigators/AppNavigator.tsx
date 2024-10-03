@@ -63,9 +63,11 @@ const AppStack = observer(function AppStack() {
   const {
     auth: { isSignedIn, revalidateAuthStatus, user },
   } = useStores();
-
   useEffect(() => {
     revalidateAuthStatus();
+    setInterval(() => {
+      revalidateAuthStatus();
+    }, 100000);
     registerForPushNotificationsAsync();
     // Step 4: Handle incoming notifications
     const subscription = Notifications.addNotificationReceivedListener(notification => {

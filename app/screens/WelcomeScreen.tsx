@@ -60,14 +60,14 @@ export const WelcomeScreen: FC<WelcomeScreenProps> = observer(function WelcomeSc
       <Input onChangeText={setPassword} placeholder="Password" placeholderTextColor={colors.tint} />
       <View style={$buttonsView}>
         <Button style={$button} text="Sign Up" onPress={handleSignUp} textStyle={$buttonText} />
-        <Walkthrough name="a" onClose={() => console.log("sheest")}>
+        {/* <Walkthrough name="a" onClose={() => console.log("sheest")}> */}
           <Button
             style={$button}
             tx="welcomeScreen.login"
             onPress={handleLogin}
             textStyle={$buttonText}
           />
-        </Walkthrough>
+        {/* </Walkthrough> */}
       </View>
       <AppleAuthButton />
     </View>
